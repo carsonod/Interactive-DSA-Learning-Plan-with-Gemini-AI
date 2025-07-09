@@ -391,7 +391,32 @@
             <p class="text-stone-600">This plan is designed to launch confident, collaborative, and effective
                 contributors.</p>
             <p class="text-sm text-stone-500 mt-2">Intern Accelerator Program | 2024</p>
+            <button id="api-settings-btn" class="mt-4 text-sm text-orange-500 hover:text-orange-600">API Settings</button>
         </footer>
+    </div>
+
+    <!-- API Settings Modal -->
+    <div id="api-settings-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center p-4 hidden z-50 opacity-0">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md flex flex-col modal-content scale-95">
+            <div class="flex justify-between items-center p-4 border-b border-stone-200">
+                <h3 class="text-xl font-bold text-stone-800">API Settings</h3>
+                <button id="api-settings-close-btn" class="text-stone-500 hover:text-stone-800">&times;</button>
+            </div>
+            <div class="p-6">
+                <p class="mb-4 text-stone-600">Enter your Gemini API key to use the AI features. Your key is stored locally in your browser.</p>
+                <div class="mb-4">
+                    <label for="gemini-api-key" class="block mb-2 text-sm font-medium text-stone-700">Gemini API Key</label>
+                    <input type="password" id="gemini-api-key"
+                        class="bg-white border border-stone-300 text-stone-900 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5"
+                        placeholder="Enter your API key">
+                </div>
+                <div class="flex justify-end">
+                    <button id="save-api-key-btn"
+                        class="bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600 transition duration-300">Save API Key</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="ai-modal"
@@ -706,6 +731,15 @@
             const interviewQuestionArea = document.getElementById('interview-question-area');
             const explainLogicBtn = document.getElementById('explain-logic-btn');
             const decodeErrorBtn = document.getElementById('decode-error-btn');
+            const interviewTopicSelect = document.getElementById('interview-topic-select');
+
+            // API Settings elements
+            const apiSettingsBtn = document.getElementById('api-settings-btn');
+            const apiSettingsModal = document.getElementById('api-settings-modal');
+            const apiSettingsCloseBtn = document.getElementById('api-settings-close-btn');
+            const geminiApiKeyInput = document.getElementById('gemini-api-key');
+            const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+
 
 
             function renderSchedule(filterWeek = null) {
@@ -912,11 +946,63 @@
                     hideModal();
                 }
             });
+            
+            // API Settings Modal Event Handlers
+            apiSettingsBtn.addEventListener('click', () => {
+                // Load saved API key if exists
+                const savedApiKey = localStorage.getItem('geminiApiKey') || '';
+                geminiApiKeyInput.value = savedApiKey;
+                
+                // Show modal
+                apiSettingsModal.classList.remove('hidden');
+                setTimeout(() => {
+                    apiSettingsModal.classList.remove('opacity-0');
+                    apiSettingsModal.querySelector('.modal-content').classList.remove('scale-95');
+                }, 10);
+            });
+            
+            apiSettingsCloseBtn.addEventListener('click', () => {
+                // Hide modal
+                apiSettingsModal.classList.add('opacity-0');
+                apiSettingsModal.querySelector('.modal-content').classList.add('scale-95');
+                setTimeout(() => {
+                    apiSettingsModal.classList.add('hidden');
+                }, 300);
+            });
+            
+            apiSettingsModal.addEventListener('click', (e) => {
+                if (e.target === apiSettingsModal) {
+                    // Hide modal when clicking outside
+                    apiSettingsModal.classList.add('opacity-0');
+                    apiSettingsModal.querySelector('.modal-content').classList.add('scale-95');
+                    setTimeout(() => {
+                        apiSettingsModal.classList.add('hidden');
+                    }, 300);
+                }
+            });
+            
+            saveApiKeyBtn.addEventListener('click', () => {
+                const apiKey = geminiApiKeyInput.value.trim();
+                localStorage.setItem('geminiApiKey', apiKey);
+                
+                // Show success message
+                alert('API key saved successfully!');
+                
+                // Hide modal
+                apiSettingsModal.classList.add('opacity-0');
+                apiSettingsModal.querySelector('.modal-content').classList.add('scale-95');
+                setTimeout(() => {
+                    apiSettingsModal.classList.add('hidden');
+                }, 300);
+            });
 
             async function callGemini(prompt) {
-                const apiKey = "";
+                const apiKey = localStorage.getItem('geminiApiKey') || "";
+                if (!apiKey) {
+                    return "Please set your Gemini API key in the API Settings to use this feature.";
+                }
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
+                
                 const payload = {
                     contents: [{ role: "user", parts: [{ text: prompt }] }],
                     generationConfig: {
