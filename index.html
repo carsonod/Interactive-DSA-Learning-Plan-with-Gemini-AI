@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Intern Accelerator: An Interactive DSA Plan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral (Background: #F5F5F4 (Stone 100), Text: #44403C (Stone 700), Accent: #A8A29E (Stone 400), Highlight: #F97316 (Orange 500)) -->
+    <!-- Application Structure Plan: A single-page, vertical-scrolling application designed for intuitive exploration. The structure avoids a rigid mirror of the report, instead opting for thematic, interactive sections. The flow is: 1) Hero section with key stats. 2) Interactive 'Pillars of Success' cards. 3) The main 'Curriculum Hub', featuring a filterable weekly schedule and a data visualization of topic distribution. This is the core interactive element, allowing users to focus on specific weeks. 4) A 'Collaboration' section with an interactive pairing schedule and tool setup guides. 5) An 'Assessment' section explaining advanced strategies. This structure guides the user from the high-level philosophy down to the daily details in a logical, engaging manner, making the dense schedule easily digestible. -->
+    <!-- Visualization & Content Choices: 1. Report Info: Weekly curriculum themes and problem counts. Goal: Provide a high-level overview of the curriculum's focus. Viz/Method: A Chart.js doughnut chart showing the percentage of days dedicated to each theme (Arrays, Trees, DP, etc.). Interaction: Hovering over a segment shows the topic and count. Justification: A visual summary is faster to grasp than reading the whole table. It highlights the program's emphasis areas. Library: Chart.js (Canvas). 2. Report Info: The full 8-week daily schedule. Goal: Allow users to view the detailed plan without being overwhelmed. Viz/Method: A responsive CSS Grid of cards, populated by JavaScript. Interaction: Filter buttons for each week (and 'All') will dynamically show/hide cards using JS. This breaks the 48-day schedule into manageable chunks. Justification: Direct interaction empowers the user to control the information density, which is key for usability with large datasets. Library: Vanilla JS + Tailwind CSS. 3. Report Info: Pairing rotation schedule. Goal: Make it easy to find who is paired with whom on any given week. Viz/Method: A dynamic HTML table. Interaction: A dropdown selector to choose the week, which then updates the table content via JS. Justification: An interactive lookup is more user-friendly than scanning a large static table. Library: Vanilla JS. 4. Report Info: Text-heavy sections (Pillars, Tool Setup, Assessment). Goal: Present detailed text without cluttering the UI. Viz/Method: Card-based layout with expandable sections. Interaction: Clicking a card header reveals the detailed text content. Justification: This 'progressive disclosure' pattern keeps the initial UI clean and allows users to drill down into topics of interest. Library: Vanilla JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F4;
+            color: #44403C;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        .nav-button {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .nav-button-active {
+            background-color: #F97316 !important;
+            color: white !important;
+        }
+
+        .day-card {
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        .details-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+
+        .details-content.open {
+            max-height: 1000px;
+            transition: max-height 0.7s ease-in;
+        }
+
+        .modal-backdrop {
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .modal-content {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .spinner {
+            border-top-color: #F97316;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .prose h3 {
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .prose h4 {
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            font-size: 1em;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-7xl">
+
+        <header class="text-center py-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-stone-800">The Intern Accelerator</h1>
+            <p class="mt-4 text-lg text-stone-600">An 8-Week Interactive Plan for Mastering Data Structures & Algorithms
+            </p>
+            <div class="mt-8 flex justify-center items-center space-x-6 md:space-x-12">
+                <div class="text-center">
+                    <p class="text-3xl font-bold text-orange-500">8</p>
+                    <p class="text-sm text-stone-500">Weeks</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-3xl font-bold text-orange-500">6</p>
+                    <p class="text-sm text-stone-500">Interns</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-3xl font-bold text-orange-500">60+</p>
+                    <p class="text-sm text-stone-500">Problems</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-3xl font-bold text-orange-500">1</p>
+                    <p class="text-sm text-stone-500">Cohesive Team</p>
+                </div>
+            </div>
+        </header>
+
+        <section id="philosophy" class="py-12">
+            <h2 class="text-3xl font-bold text-center text-stone-800 mb-2">The Three Pillars of Success</h2>
+            <p class="text-center text-stone-600 max-w-3xl mx-auto mb-10">This program is built on a foundation of
+                structured learning, deep collaboration, and professional practices to accelerate growth and ensure a
+                high return on the internship investment.</p>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-bold text-stone-800 mb-3">1. Structured, Pattern-Based Learning</h3>
+                    <p class="text-stone-600">Instead of random problems, we focus on a curated set of high-impact
+                        challenges that teach fundamental patterns. This builds a transferable, deep understanding of
+                        problem-solving techniques.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-bold text-stone-800 mb-3">2. Active Collaboration</h3>
+                    <p class="text-stone-600">Daily Pair Programming is mandatory. This agile technique improves code
+                        quality, accelerates learning through teaching, and distributes knowledge evenly across the
+                        cohort, building a true team from day one.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-bold text-stone-800 mb-3">3. Professional Tooling</h3>
+                    <p class="text-stone-600">Interns use industry-standard tools like VS Code and Live Share. This
+                        immersion prepares them for a real-world development environment, teaching the craft of software
+                        engineering alongside the theory.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="curriculum" class="py-12 bg-stone-200 rounded-lg px-6">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-stone-800 mb-4">The 8-Week Curriculum Hub</h2>
+                <button id="synthesize-week-btn"
+                    class="mb-8 bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600 transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">✨
+                    Synthesize Week's Learning</button>
+            </div>
+            <div class="flex flex-col lg:flex-row gap-12">
+                <div class="lg:w-2/3">
+                    <p class="text-center lg:text-left text-stone-600 mb-6">Select a week to view the detailed daily
+                        plan. The curriculum progresses from foundational concepts to advanced paradigms, with each
+                        Saturday dedicated to a complex "Mob Programming" challenge to synthesize the week's learnings.
+                    </p>
+                    <div id="week-filters" class="flex flex-wrap justify-center gap-2 mb-8"></div>
+                    <div id="schedule-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+                <div class="lg:w-1/3 flex flex-col items-center">
+                    <h3 class="text-xl font-bold text-stone-800 mb-4 text-center">Topic Distribution</h3>
+                    <p class="text-center text-stone-600 mb-4">A high-level view of the topics covered throughout the
+                        program, showing the emphasis on core data structures and algorithms.</p>
+                    <div class="chart-container">
+                        <canvas id="topicsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="collaboration" class="py-12">
+            <h2 class="text-3xl font-bold text-center text-stone-800 mb-10">Collaboration & Tooling</h2>
+            <div class="grid lg:grid-cols-2 gap-12 items-start">
+                <div>
+                    <h3 class="text-2xl font-bold text-stone-800 mb-4">Weekly Pairing Schedule</h3>
+                    <p class="text-stone-600 mb-6">To maximize knowledge transfer, pairs are rotated weekly. Select a
+                        week to see the assigned pairs.</p>
+                    <div class="flex items-center gap-4 mb-4">
+                        <label for="week-selector" class="font-semibold text-stone-700">Select Week:</label>
+                        <select id="week-selector"
+                            class="bg-white border border-stone-300 text-stone-900 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5"></select>
+                    </div>
+                    <div class="overflow-x-auto bg-white rounded-lg shadow-sm">
+                        <table class="w-full text-sm text-left text-stone-500">
+                            <thead class="text-xs text-stone-700 uppercase bg-stone-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">Pair A</th>
+                                    <th scope="col" class="px-6 py-3">Pair B</th>
+                                    <th scope="col" class="px-6 py-3">Pair C</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pairing-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-8 bg-white p-6 rounded-lg shadow-sm">
+                        <h3 class="text-xl font-bold text-stone-800 mb-3">✨ Daily Kick-off</h3>
+                        <p class="text-stone-600 mb-4">Start your pairing session with a quick warm-up! Generate a topic
+                            related to the current week's theme.</p>
+                        <button id="daily-kickoff-btn"
+                            class="w-full bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600 transition duration-300">Generate
+                            Discussion Topic</button>
+                        <div id="kickoff-topic-area"
+                            class="mt-4 p-4 bg-stone-100 rounded-lg text-stone-700 text-center hidden"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-bold text-stone-800 mb-4">The Toolkit</h3>
+                    <p class="text-stone-600 mb-6">A professional toolset is essential. Below are the core tools and
+                        setup instructions.</p>
+                    <div class="space-y-4">
+                        <div class="bg-white rounded-lg shadow-sm border border-stone-200">
+                            <button
+                                class="w-full text-left p-4 font-semibold text-lg text-stone-700 flex justify-between items-center details-toggle">
+                                VS Code + Live Share Setup
+                                <span class="transform transition-transform duration-300">▼</span>
+                            </button>
+                            <div class="details-content">
+                                <div class="p-4 border-t border-stone-200 text-stone-600">
+                                    <ol class="list-decimal list-inside space-y-2">
+                                        <li><b>Install VS Code:</b> Download from <a
+                                                href="https://code.visualstudio.com/" target="_blank"
+                                                class="text-orange-500 hover:underline">code.visualstudio.com</a>.</li>
+                                        <li><b>Install Live Share Extension:</b> In VS Code, go to the Extensions view,
+                                            search for "Live Share" by Microsoft, and click Install.</li>
+                                        <li><b>Sign In:</b> Use a GitHub or Microsoft account to sign into Live Share
+                                            for identification.</li>
+                                        <li><b>To Host (Driver):</b> Click the "Live Share" button in the status bar to
+                                            start a session and copy the invitation link.</li>
+                                        <li><b>To Join (Navigator):</b> Click the link from your partner to open the
+                                            session in your VS Code.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm border border-stone-200">
+                            <button
+                                class="w-full text-left p-4 font-semibold text-lg text-stone-700 flex justify-between items-center details-toggle">
+                                Pair Programming Roles
+                                <span class="transform transition-transform duration-300">▼</span>
+                            </button>
+                            <div class="details-content">
+                                <div class="p-4 border-t border-stone-200 text-stone-600 space-y-3">
+                                    <p><b>The Driver:</b> Focuses on the tactical, line-by-line implementation. They
+                                        have control of the keyboard and should verbalize their thought process
+                                        continuously.</p>
+                                    <p><b>The Navigator:</b> Focuses on the strategic big picture. They review code as
+                                        it's written, anticipate edge cases, and plan the next steps, guiding the driver
+                                        with questions and suggestions.</p>
+                                    <p class="font-semibold">Remember to switch roles frequently (e.g., every 25
+                                        minutes)!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="feedback-studio" class="py-12 bg-stone-200 rounded-lg px-6">
+            <h2 class="text-3xl font-bold text-center text-stone-800 mb-4">✨ AI Feedback Studio</h2>
+            <p class="text-center text-stone-600 max-w-3xl mx-auto mb-10">Get instant feedback on your code. Paste your
+                solution and any error messages, provide the problem name, and our AI mentor will act as your personal
+                code reviewer and complexity analyst.</p>
+            <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-sm">
+                <div>
+                    <label for="problem-context" class="block mb-2 text-sm font-medium text-stone-700">Problem Name
+                        (e.g., "Two Sum")</label>
+                    <input type="text" id="problem-context"
+                        class="bg-white border border-stone-300 text-stone-900 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5 mb-4"
+                        placeholder="Which problem is this code for?">
+                </div>
+                <div>
+                    <label for="code-input" class="block mb-2 text-sm font-medium text-stone-700">Paste Your Code
+                        Solution Here</label>
+                    <textarea id="code-input" rows="10"
+                        class="block p-2.5 w-full text-sm text-stone-900 bg-white rounded-lg border border-stone-300 focus:ring-orange-500 focus:border-orange-500 font-mono"
+                        placeholder="function twoSum(nums, target) { ... }"></textarea>
+                </div>
+                <div class="mt-4">
+                    <label for="error-input" class="block mb-2 text-sm font-medium text-stone-700">Paste Error Message
+                        (Optional)</label>
+                    <textarea id="error-input" rows="3"
+                        class="block p-2.5 w-full text-sm text-red-700 bg-red-50 rounded-lg border border-red-300 focus:ring-red-500 focus:border-red-500 font-mono"
+                        placeholder="TypeError: Cannot read properties of null..."></textarea>
+                </div>
+                <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <button id="code-review-btn"
+                        class="w-full bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600 transition duration-300">Review
+                        Code</button>
+                    <button id="complexity-analysis-btn"
+                        class="w-full bg-stone-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-stone-700 transition duration-300">Analyze
+                        Complexity</button>
+                    <button id="explain-logic-btn"
+                        class="w-full bg-sky-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-sky-700 transition duration-300">✨
+                        Explain Logic</button>
+                    <button id="decode-error-btn"
+                        class="w-full bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition duration-300">✨
+                        Decode Error</button>
+                </div>
+                <div id="feedback-result-area"
+                    class="mt-6 p-4 bg-stone-100 rounded-lg text-stone-700 hidden prose max-w-none"></div>
+            </div>
+        </section>
+
+        <section id="pattern-comparator" class="py-12">
+            <h2 class="text-3xl font-bold text-center text-stone-800 mb-4">✨ Pattern Playground</h2>
+            <p class="text-center text-stone-600 max-w-3xl mx-auto mb-10">Struggling to see the difference between two
+                concepts? Select two patterns from the dropdowns below and let our AI mentor explain the key
+                distinctions, use cases, and examples for each.</p>
+            <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-sm">
+                <div class="grid sm:grid-cols-2 gap-4 items-end">
+                    <div>
+                        <label for="pattern1" class="block mb-2 text-sm font-medium text-stone-700">Pattern 1</label>
+                        <select id="pattern1"
+                            class="bg-white border border-stone-300 text-stone-900 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5"></select>
+                    </div>
+                    <div>
+                        <label for="pattern2" class="block mb-2 text-sm font-medium text-stone-700">Pattern 2</label>
+                        <select id="pattern2"
+                            class="bg-white border border-stone-300 text-stone-900 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5"></select>
+                    </div>
+                </div>
+                <div class="mt-6 text-center">
+                    <button id="compare-patterns-btn"
+                        class="w-full sm:w-auto bg-orange-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-orange-600 transition duration-300">Compare
+                        Patterns</button>
+                </div>
+                <div id="comparison-result-area"
+                    class="mt-6 p-4 bg-stone-100 rounded-lg text-stone-700 hidden prose max-w-none"></div>
+            </div>
+        </section>
+
+        <section id="assessment" class="py-12">
+            <h2 class="text-3xl font-bold text-center text-stone-800 mb-10">Assessment & Deeper Learning</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-bold text-stone-800 mb-3">Saturday "Mob Programming"</h3>
+                    <p class="text-stone-600">Each Saturday, the entire cohort tackles a single hard problem together.
+                        This weekly capstone synthesizes learning, fills knowledge gaps, and enhances large-group
+                        communication and problem-solving skills.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-bold text-stone-800 mb-3">Mock Interviews</h3>
+                    <p class="text-stone-600">Formal one-on-one mock interviews are held at the end of Week 4 and Week
+                        8. This provides a critical feedback loop, assesses individual progress, and builds confidence
+                        under pressure.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-bold text-stone-800 mb-3">✨ Behavioral Prep</h3>
+                    <p class="text-stone-600 mb-4">Technical skill is only half the battle. Generate a behavioral
+                        question related to a technical topic to practice telling your story.</p>
+                    <select id="interview-topic-select"
+                        class="bg-white border border-stone-300 text-stone-900 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5 mb-4"></select>
+                    <button id="generate-interview-question-btn"
+                        class="w-full bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600 transition duration-300">Generate
+                        Question</button>
+                    <div id="interview-question-area"
+                        class="mt-4 p-4 bg-stone-100 rounded-lg text-stone-700 text-center hidden"></div>
+                </div>
+            </div>
+            <div class="mt-8 bg-white p-6 rounded-lg shadow-sm">
+                <h3 class="text-xl font-bold text-stone-800 mb-3 text-center">The Socratic Six: Questions for Deeper
+                    Thinking</h3>
+                <p class="text-stone-600 mb-6 text-center">Mentors use these questions to guide interns beyond a correct
+                    answer toward true algorithmic thinking.</p>
+                <ul class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-stone-700">
+                    <li class="p-3 bg-stone-100 rounded">What is the time and space complexity? Why?</li>
+                    <li class="p-3 bg-stone-100 rounded">What was the brute-force solution? Why is this better?</li>
+                    <li class="p-3 bg-stone-100 rounded">What are the edge cases? (Empty, null, duplicates, etc.)</li>
+                    <li class="p-3 bg-stone-100 rounded">What is the underlying pattern here? (e.g., Sliding Window)
+                    </li>
+                    <li class="p-3 bg-stone-100 rounded">Is the code readable? How could you refactor it?</li>
+                    <li class="p-3 bg-stone-100 rounded">Explain the logic in plain English, without code.</li>
+                </ul>
+            </div>
+        </section>
+
+        <footer class="text-center py-8 mt-12 border-t border-stone-300">
+            <p class="text-stone-600">This plan is designed to launch confident, collaborative, and effective
+                contributors.</p>
+            <p class="text-sm text-stone-500 mt-2">Intern Accelerator Program | 2024</p>
+        </footer>
+    </div>
+
+    <div id="ai-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center p-4 hidden z-50 opacity-0">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col modal-content scale-95">
+            <div class="flex justify-between items-center p-4 border-b border-stone-200">
+                <h3 id="modal-title" class="text-xl font-bold text-stone-800">✨ AI-Powered Explanation</h3>
+                <button id="modal-close-btn" class="text-stone-500 hover:text-stone-800">&times;</button>
+            </div>
+            <div id="modal-body" class="p-6 overflow-y-auto">
+                <div id="modal-spinner" class="flex justify-center items-center h-48">
+                    <div class="spinner w-12 h-12 rounded-full border-4 border-stone-200"></div>
+                </div>
+                <div id="modal-content-area" class="prose max-w-none text-stone-700"></div>
+                <div id="modal-actions-area"
+                    class="mt-6 border-t pt-4 flex flex-col sm:flex-row gap-4 justify-center hidden">
+                    <button id="explain-analogy-btn"
+                        class="bg-stone-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-stone-700 transition duration-300">✨
+                        Explain with Analogy</button>
+                    <button id="suggest-similar-btn"
+                        class="bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600 transition duration-300">Suggest
+                        Similar Problems</button>
+                </div>
+                <div id="similar-problems-spinner" class="mt-4 hidden">
+                    <div class="spinner w-6 h-6 mx-auto"></div>
+                </div>
+                <div id="analogy-spinner" class="mt-4 hidden">
+                    <div class="spinner w-6 h-6 mx-auto"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let currentWeekFilter = null;
+            let currentProblemForModal = null;
+            let currentTopicForModal = null;
+
+            const curriculumData = [
+                {
+                    week: 1, day: "Tue", theme: "Arrays & Hashing", topic: "Static & Dynamic Arrays", problems: [
+                        { name: "Two Sum", link: "https://leetcode.com/problems/two-sum/", difficulty: "Easy" },
+                        { name: "Contains Duplicate", link: "https://leetcode.com/problems/contains-duplicate/", difficulty: "Easy" }
+                    ]
+                },
+                {
+                    week: 1, day: "Wed", theme: "Arrays & Hashing", topic: "Hashing & Anagrams", problems: [
+                        { name: "Valid Anagram", link: "https://leetcode.com/problems/valid-anagram/", difficulty: "Easy" },
+                        { name: "Ransom Note", link: "https://leetcode.com/problems/ransom-note/", difficulty: "Easy" }
+                    ]
+                },
+                {
+                    week: 1, day: "Thu", theme: "Arrays & Hashing", topic: "Hashing Complex Keys", problems: [
+                        { name: "Group Anagrams", link: "https://leetcode.com/problems/group-anagrams/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 1, day: "Fri", theme: "Arrays & Hashing", topic: "Prefix/Suffix & Products", problems: [
+                        { name: "Product of Array Except Self", link: "https://leetcode.com/problems/product-of-array-except-self/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 1, day: "Sat", theme: "Arrays & Hashing", topic: "Mob Challenge", problems: [
+                        { name: "Longest Consecutive Sequence", link: "https://leetcode.com/problems/longest-consecutive-sequence/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 2, day: "Mon", theme: "Two Pointers", topic: "Intro to Two Pointers", problems: [
+                        { name: "Valid Palindrome", link: "https://leetcode.com/problems/valid-palindrome/", difficulty: "Easy" },
+                        { name: "Merge Sorted Array", link: "https://leetcode.com/problems/merge-sorted-array/", difficulty: "Easy" }
+                    ]
+                },
+                {
+                    week: 2, day: "Tue", theme: "Two Pointers", topic: "Two Pointers on Sorted", problems: [
+                        { name: "Two Sum II", link: "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 2, day: "Wed", theme: "Two Pointers", topic: "3-Pointer Problems", problems: [
+                        { name: "3Sum", link: "https://leetcode.com/problems/3sum/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 2, day: "Thu", theme: "Two Pointers", topic: "Two Pointers (Max Area)", problems: [
+                        { name: "Container With Most Water", link: "https://leetcode.com/problems/container-with-most-water/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 2, day: "Fri", theme: "Sliding Window", topic: "Sliding Window", problems: [
+                        { name: "Best Time to Buy/Sell Stock", link: "https://leetcode.com/problems/best-time-to-buy-and-sell-stock/", difficulty: "Easy" },
+                        { name: "Maximum Subarray", link: "https://leetcode.com/problems/maximum-subarray/", difficulty: "Easy" }
+                    ]
+                },
+                {
+                    week: 2, day: "Sat", theme: "Sliding Window", topic: "Mob Challenge", problems: [
+                        { name: "Longest Substring Without Repeating Characters", link: "https://leetcode.com/problems/longest-substring-without-repeating-characters/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 3, day: "Mon", theme: "Stacks", topic: "Stack (LIFO) Basics", problems: [
+                        { name: "Valid Parentheses", link: "https://leetcode.com/problems/valid-parentheses/", difficulty: "Easy" },
+                        { name: "Min Stack", link: "https://leetcode.com/problems/min-stack/", difficulty: "Easy" }
+                    ]
+                },
+                {
+                    week: 3, day: "Tue", theme: "Stacks", topic: "Monotonic Stack", problems: [
+                        { name: "Daily Temperatures", link: "https://leetcode.com/problems/daily-temperatures/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 3, day: "Wed", theme: "Stacks", topic: "Stack for Evaluation", problems: [
+                        { name: "Evaluate Reverse Polish Notation", link: "https://leetcode.com/problems/evaluate-reverse-polish-notation/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 3, day: "Thu", theme: "Stacks", topic: "Generating with Stacks", problems: [
+                        { name: "Generate Parentheses", link: "https://leetcode.com/problems/generate-parentheses/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 3, day: "Fri", theme: "Stacks", topic: "Advanced Stack", problems: [
+                        { name: "Car Fleet", link: "https://leetcode.com/problems/car-fleet/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 3, day: "Sat", theme: "Stacks", topic: "Mob Challenge", problems: [
+                        { name: "Largest Rectangle in Histogram", link: "https://leetcode.com/problems/largest-rectangle-in-histogram/", difficulty: "Hard" }
+                    ]
+                },
+                {
+                    week: 4, day: "Mon", theme: "Linked Lists", topic: "Singly & Doubly Lists", problems: [
+                        { name: "Reverse Linked List", link: "https://leetcode.com/problems/reverse-linked-list/", difficulty: "Easy" },
+                        { name: "Palindrome Linked List", link: "https://leetcode.com/problems/palindrome-linked-list/", difficulty: "Easy" }
+                    ]
+                },
+                {
+                    week: 4, day: "Tue", theme: "Linked Lists", topic: "Fast & Slow Pointers", problems: [
+                        { name: "Linked List Cycle", link: "https://leetcode.com/problems/linked-list-cycle/", difficulty: "Easy" },
+                        { name: "Intersection of Two Linked Lists", link: "https://leetcode.com/problems/intersection-of-two-linked-lists/", difficulty: "Easy" }
+                    ]
+                },
+                {
+                    week: 4, day: "Wed", theme: "Linked Lists", topic: "Merging Lists", problems: [
+                        { name: "Merge Two Sorted Lists", link: "https://leetcode.com/problems/merge-two-sorted-lists/", difficulty: "Easy" },
+                        { name: "Remove Duplicates from Sorted List", link: "https://leetcode.com/problems/remove-duplicates-from-sorted-list/", difficulty: "Easy" }
+                    ]
+                },
+                {
+                    week: 4, day: "Thu", theme: "Linked Lists", topic: "Removing Nodes", problems: [
+                        { name: "Remove Nth Node From End", link: "https://leetcode.com/problems/remove-nth-node-from-end-of-list/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 4, day: "Fri", theme: "Linked Lists", topic: "Reordering Lists", problems: [
+                        { name: "Reorder List", link: "https://leetcode.com/problems/reorder-list/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 4, day: "Sat", theme: "Linked Lists", topic: "Mob Challenge", problems: [
+                        { name: "LRU Cache", link: "https://leetcode.com/problems/lru-cache/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 5, day: "Mon", theme: "Trees", topic: "Intro to Trees & Traversal", problems: [
+                        { name: "Max Depth of Binary Tree", link: "https://leetcode.com/problems/maximum-depth-of-binary-tree/", difficulty: "Easy" },
+                        { name: "Diameter of Binary Tree", link: "https://leetcode.com/problems/diameter-of-binary-tree/", difficulty: "Easy" }
+                    ]
+                },
+                {
+                    week: 5, day: "Tue", theme: "Trees", topic: "Tree Comparison", problems: [
+                        { name: "Same Tree", link: "https://leetcode.com/problems/same-tree/", difficulty: "Easy" },
+                        { name: "Subtree of Another Tree", link: "https://leetcode.com/problems/subtree-of-another-tree/", difficulty: "Easy" }
+                    ]
+                },
+                {
+                    week: 5, day: "Wed", theme: "Trees", topic: "Tree Inversion & BFS", problems: [
+                        { name: "Invert Binary Tree", link: "https://leetcode.com/problems/invert-binary-tree/", difficulty: "Easy" },
+                        { name: "Balanced Binary Tree", link: "https://leetcode.com/problems/balanced-binary-tree/", difficulty: "Easy" }
+                    ]
+                },
+                {
+                    week: 5, day: "Thu", theme: "Trees", topic: "Binary Search Trees (BST)", problems: [
+                        { name: "Validate BST", link: "https://leetcode.com/problems/validate-binary-search-tree/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 5, day: "Fri", theme: "Trees", topic: "BST Properties", problems: [
+                        { name: "Kth Smallest Element in BST", link: "https://leetcode.com/problems/kth-smallest-element-in-a-bst/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 5, day: "Sat", theme: "Trees", topic: "Mob Challenge", problems: [
+                        { name: "Binary Tree Max Path Sum", link: "https://leetcode.com/problems/binary-tree-maximum-path-sum/", difficulty: "Hard" }
+                    ]
+                },
+                {
+                    week: 6, day: "Mon", theme: "Heaps & Tries", topic: "Intro to Heaps", problems: [
+                        { name: "Kth Largest in Stream", link: "https://leetcode.com/problems/kth-largest-element-in-a-stream/", difficulty: "Easy" },
+                        { name: "Last Stone Weight", link: "https://leetcode.com/problems/last-stone-weight/", difficulty: "Easy" }
+                    ]
+                },
+                {
+                    week: 6, day: "Tue", theme: "Heaps & Tries", topic: "Heap Applications", problems: [
+                        { name: "Top K Frequent Elements", link: "https://leetcode.com/problems/top-k-frequent-elements/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 6, day: "Wed", theme: "Heaps & Tries", topic: "Median Finding", problems: [
+                        { name: "Find Median from Data Stream", link: "https://leetcode.com/problems/find-median-from-data-stream/", difficulty: "Hard" }
+                    ]
+                },
+                {
+                    week: 6, day: "Thu", theme: "Heaps & Tries", topic: "Intro to Tries", problems: [
+                        { name: "Implement Trie", link: "https://leetcode.com/problems/implement-trie-prefix-tree/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 6, day: "Fri", theme: "Heaps & Tries", topic: "Trie Applications", problems: [
+                        { name: "Add/Search Word DS", link: "https://leetcode.com/problems/design-add-and-search-words-data-structure/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 6, day: "Sat", theme: "Heaps & Tries", topic: "Mob Challenge", problems: [
+                        { name: "Word Search II", link: "https://leetcode.com/problems/word-search-ii/", difficulty: "Hard" }
+                    ]
+                },
+                {
+                    week: 7, day: "Mon", theme: "Graphs", topic: "Intro to Graphs & Traversal", problems: [
+                        { name: "Number of Islands", link: "https://leetcode.com/problems/number-of-islands/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 7, day: "Tue", theme: "Graphs", topic: "Graph Cloning", problems: [
+                        { name: "Clone Graph", link: "https://leetcode.com/problems/clone-graph/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 7, day: "Wed", theme: "Graphs", topic: "Graph Traversal (Matrix)", problems: [
+                        { name: "Pacific Atlantic Water Flow", link: "https://leetcode.com/problems/pacific-atlantic-water-flow/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 7, day: "Thu", theme: "Graphs", topic: "Topological Sort", problems: [
+                        { name: "Course Schedule", link: "https://leetcode.com/problems/course-schedule/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 7, day: "Fri", theme: "Graphs", topic: "Advanced Graph (Union-Find)", problems: [
+                        { name: "Redundant Connection", link: "https://leetcode.com/problems/redundant-connection/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 7, day: "Sat", theme: "Graphs", topic: "Mob Challenge", problems: [
+                        { name: "Word Ladder", link: "https://leetcode.com/problems/word-ladder/", difficulty: "Hard" }
+                    ]
+                },
+                {
+                    week: 8, day: "Mon", theme: "Dynamic Programming", topic: "Intro to 1D DP", problems: [
+                        { name: "Climbing Stairs", link: "https://leetcode.com/problems/climbing-stairs/", difficulty: "Easy" },
+                        { name: "Min Cost Climbing Stairs", link: "https://leetcode.com/problems/min-cost-climbing-stairs/", difficulty: "Easy" }
+                    ]
+                },
+                {
+                    week: 8, day: "Tue", theme: "Dynamic Programming", topic: "House Robber Pattern", problems: [
+                        { name: "House Robber", link: "https://leetcode.com/problems/house-robber/", difficulty: "Medium" },
+                        { name: "House Robber II", link: "https://leetcode.com/problems/house-robber-ii/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 8, day: "Wed", theme: "Dynamic Programming", topic: "Coin Change Pattern", problems: [
+                        { name: "Coin Change", link: "https://leetcode.com/problems/coin-change/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 8, day: "Thu", theme: "Dynamic Programming", topic: "Longest Subsequence", problems: [
+                        { name: "Longest Increasing Subsequence", link: "https://leetcode.com/problems/longest-increasing-subsequence/", difficulty: "Medium" }
+                    ]
+                },
+                {
+                    week: 8, day: "Fri", theme: "Dynamic Programming", topic: "Program Wrap-up", problems: [
+                        { name: "Final Mock Interview Prep", link: "#", difficulty: "N/A" }
+                    ]
+                },
+            ];
+
+            const pairingData = [
+                { week: 1, pairs: [["Intern 1 & 2", "Intern 3 & 4", "Intern 5 & 6"]] },
+                { week: 2, pairs: [["Intern 1 & 3", "Intern 2 & 5", "Intern 4 & 6"]] },
+                { week: 3, pairs: [["Intern 1 & 4", "Intern 2 & 6", "Intern 3 & 5"]] },
+                { week: 4, pairs: [["Intern 1 & 5", "Intern 2 & 4", "Intern 3 & 6"]] },
+                { week: 5, pairs: [["Intern 1 & 6", "Intern 2 & 3", "Intern 4 & 5"]] },
+                { week: 6, pairs: [["Intern 1 & 2", "Intern 3 & 4", "Intern 5 & 6"]] },
+                { week: 7, pairs: [["Intern 1 & 3", "Intern 2 & 5", "Intern 4 & 6"]] },
+                { week: 8, pairs: [["Intern 1 & 4", "Intern 2 & 6", "Intern 3 & 5"]] },
+            ];
+
+            const difficultyColors = { 'Easy': 'bg-green-100 text-green-800', 'Medium': 'bg-yellow-100 text-yellow-800', 'Hard': 'bg-red-100 text-red-800', 'N/A': 'bg-gray-100 text-gray-800' };
+
+            const scheduleGrid = document.getElementById('schedule-grid');
+            const weekFiltersContainer = document.getElementById('week-filters');
+            const synthesizeWeekBtn = document.getElementById('synthesize-week-btn');
+            const dailyKickoffBtn = document.getElementById('daily-kickoff-btn');
+            const kickoffTopicArea = document.getElementById('kickoff-topic-area');
+            const comparePatternsBtn = document.getElementById('compare-patterns-btn');
+            const comparisonResultArea = document.getElementById('comparison-result-area');
+            const codeReviewBtn = document.getElementById('code-review-btn');
+            const complexityAnalysisBtn = document.getElementById('complexity-analysis-btn');
+            const feedbackResultArea = document.getElementById('feedback-result-area');
+            const generateInterviewQuestionBtn = document.getElementById('generate-interview-question-btn');
+            const interviewQuestionArea = document.getElementById('interview-question-area');
+            const explainLogicBtn = document.getElementById('explain-logic-btn');
+            const decodeErrorBtn = document.getElementById('decode-error-btn');
+
+
+            function renderSchedule(filterWeek = null) {
+                currentWeekFilter = filterWeek;
+                synthesizeWeekBtn.disabled = !filterWeek;
+
+                scheduleGrid.innerHTML = '';
+                const filteredData = filterWeek ? curriculumData.filter(item => item.week === filterWeek) : curriculumData;
+
+                filteredData.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = `day-card bg-white p-4 rounded-lg shadow-sm border-l-4 week-${item.week} opacity-0 transform scale-95 flex flex-col`;
+                    const borderColor = `border-orange-${200 + item.week * 50}`;
+                    card.classList.add(borderColor);
+
+                    const problemsContentHtml = item.problems.map((p, index) => `
+                <div class="pt-2 ${index > 0 ? 'mt-2 border-t border-stone-200' : ''}">
+                    <div class="flex justify-between items-center">
+                         <p class="text-sm text-stone-600">Problem: <a href="${p.link}" target="_blank" class="text-orange-500 hover:underline font-semibold">${p.name}</a></p>
+                         <span class="text-xs font-bold px-2 py-0.5 rounded-full ${difficultyColors[p.difficulty]}">${p.difficulty}</span>
+                    </div>
+                    <div class="mt-2 grid grid-cols-2 gap-2">
+                        <button data-problem="${p.name}" class="hint-btn text-xs bg-stone-100 text-stone-600 font-semibold py-1 px-2 rounded-md hover:bg-stone-200 transition w-full">✨ Get Hint</button>
+                        <button data-problem="${p.name}" data-topic="${item.topic}" class="explain-btn text-xs bg-stone-200 text-stone-700 font-semibold py-1 px-2 rounded-md hover:bg-stone-300 transition w-full">Explain All</button>
+                    </div>
+                </div>
+            `).join('');
+
+                    card.innerHTML = `
+                <div class="flex-grow">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-semibold text-stone-500">W${item.week} / ${item.day}</span>
+                    </div>
+                    <h4 class="font-bold text-stone-800">${item.topic}</h4>
+                </div>
+                <div class="mt-auto">
+                    ${problemsContentHtml}
+                </div>
+            `;
+
+                    scheduleGrid.appendChild(card);
+
+                    setTimeout(() => {
+                        card.classList.remove('opacity-0', 'scale-95');
+                        card.classList.add('opacity-100', 'scale-100');
+                    }, 10);
+                });
+
+                document.querySelectorAll('.explain-btn').forEach(btn => btn.addEventListener('click', handleExplainClick));
+                document.querySelectorAll('.hint-btn').forEach(btn => btn.addEventListener('click', handleGetHintClick));
+            }
+
+            function setupFilters() {
+                const weeks = [...new Set(curriculumData.map(item => item.week))];
+
+                const allButton = document.createElement('button');
+                allButton.textContent = 'All Weeks';
+                allButton.className = 'nav-button px-4 py-2 text-sm font-medium text-stone-700 bg-white rounded-md shadow-sm hover:bg-stone-50 focus:outline-none';
+                allButton.classList.add('nav-button-active');
+                allButton.addEventListener('click', () => {
+                    renderSchedule(null);
+                    setActiveButton(allButton);
+                });
+                weekFiltersContainer.appendChild(allButton);
+
+                weeks.forEach(week => {
+                    const button = document.createElement('button');
+                    button.textContent = `Week ${week}`;
+                    button.className = 'nav-button px-4 py-2 text-sm font-medium text-stone-700 bg-white rounded-md shadow-sm hover:bg-stone-50 focus:outline-none';
+                    button.addEventListener('click', () => {
+                        renderSchedule(week);
+                        setActiveButton(button);
+                    });
+                    weekFiltersContainer.appendChild(button);
+                });
+            }
+
+            function setActiveButton(activeBtn) {
+                weekFiltersContainer.querySelectorAll('.nav-button').forEach(btn => {
+                    btn.classList.remove('nav-button-active');
+                });
+                activeBtn.classList.add('nav-button-active');
+            }
+
+            function renderTopicsChart() {
+                const topicCounts = curriculumData.reduce((acc, item) => {
+                    let mainTheme = item.theme.split(' & ')[0];
+                    if (mainTheme === "Two Pointers" || mainTheme === "Sliding Window") mainTheme = "Pointers/Window";
+                    acc[mainTheme] = (acc[mainTheme] || 0) + item.problems.length;
+                    return acc;
+                }, {});
+
+                const ctx = document.getElementById('topicsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(topicCounts),
+                        datasets: [{
+                            label: 'Problems per Topic',
+                            data: Object.values(topicCounts),
+                            backgroundColor: ['#fdba74', '#fb923c', '#f97316', '#ea580c', '#c2410c', '#9a3412', '#7c2d12', '#431407'],
+                            borderColor: '#F5F5F4',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 12 },
+                                    color: '#44403C',
+                                    boxWidth: 15,
+                                    padding: 15
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: '#44403C',
+                                titleFont: { size: 14, weight: 'bold' },
+                                bodyFont: { size: 12 },
+                                padding: 10,
+                                cornerRadius: 4
+                            }
+                        }
+                    }
+                });
+            }
+
+            function setupPairingSchedule() {
+                const selector = document.getElementById('week-selector');
+                const tableBody = document.getElementById('pairing-table-body');
+
+                pairingData.forEach(data => {
+                    const option = document.createElement('option');
+                    option.value = data.week;
+                    option.textContent = `Week ${data.week}`;
+                    selector.appendChild(option);
+                });
+
+                function renderTable(week) {
+                    const weekData = pairingData.find(d => d.week == week);
+                    if (!weekData) return;
+
+                    tableBody.innerHTML = '';
+                    const rowData = weekData.pairs[0];
+                    const tr = document.createElement('tr');
+                    tr.className = 'bg-white border-b';
+                    tr.innerHTML = `
+                <td class="px-6 py-4 font-medium text-stone-900 whitespace-nowrap">${rowData[0]}</td>
+                <td class="px-6 py-4 font-medium text-stone-900 whitespace-nowrap">${rowData[1]}</td>
+                <td class="px-6 py-4 font-medium text-stone-900 whitespace-nowrap">${rowData[2]}</td>
+            `;
+                    tableBody.appendChild(tr);
+                }
+
+                selector.addEventListener('change', (e) => renderTable(e.target.value));
+                renderTable(1);
+            }
+
+            function setupDetailsToggles() {
+                document.querySelectorAll('.details-toggle').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const content = button.nextElementSibling;
+                        const arrow = button.querySelector('span');
+                        content.classList.toggle('open');
+                        arrow.classList.toggle('rotate-180');
+                    });
+                });
+            }
+
+            const modal = document.getElementById('ai-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalContentArea = document.getElementById('modal-content-area');
+            const modalSpinner = document.getElementById('modal-spinner');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+            const modalActionsArea = document.getElementById('modal-actions-area');
+            const suggestSimilarBtn = document.getElementById('suggest-similar-btn');
+            const explainAnalogyBtn = document.getElementById('explain-analogy-btn');
+            const similarProblemsSpinner = document.getElementById('similar-problems-spinner');
+            const analogySpinner = document.getElementById('analogy-spinner');
+
+            function showModal() {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    modal.querySelector('.modal-content').classList.remove('scale-95');
+                }, 10);
+            }
+
+            function hideModal() {
+                modal.classList.add('opacity-0');
+                modal.querySelector('.modal-content').classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modalActionsArea.classList.add('hidden');
+                }, 300);
+            }
+
+            modalCloseBtn.addEventListener('click', hideModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    hideModal();
+                }
+            });
+
+            async function callGemini(prompt) {
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const payload = {
+                    contents: [{ role: "user", parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        topK: 1,
+                        topP: 1,
+                        maxOutputTokens: 8192,
+                    },
+                };
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API call failed with status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts.length > 0) {
+                        return result.candidates[0].content.parts[0].text;
+                    } else {
+                        return "Sorry, I couldn't generate a response. The model's response was empty.";
+                    }
+                } catch (error) {
+                    console.error("Gemini API call error:", error);
+                    return `An error occurred while contacting the AI model: ${error.message}. Please check the console for details.`;
+                }
+            }
+
+            function formatResponse(text) {
+                let html = text
+                    .replace(/#### (.*?)\n/g, '<h4>$1</h4>')
+                    .replace(/### (.*?)\n/g, '<h3>$1</h3>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`([^`]+)`/g, '<code class="bg-stone-200 text-stone-800 rounded px-1 py-0.5">$1</code>')
+                    .replace(/\n/g, '<br>');
+                return html;
+            }
+
+            async function handleGetHintClick(event) {
+                const problem = event.target.dataset.problem;
+                modalTitle.textContent = `✨ Hint for: ${problem}`;
+                modalContentArea.innerHTML = '';
+                modalSpinner.classList.remove('hidden');
+                modalActionsArea.classList.add('hidden');
+                showModal();
+
+                const prompt = `
+            As a helpful CS tutor, I'm stuck on the LeetCode problem "${problem}". 
+            Please provide a single, concise, one-sentence hint to get me started. 
+            The hint should gently guide me towards the right data structure, initial thought process, or algorithmic pattern, without giving away the solution.
+        `;
+                const hint = await callGemini(prompt);
+                modalSpinner.classList.add('hidden');
+                modalContentArea.innerHTML = formatResponse(hint);
+            }
+
+
+            async function handleExplainClick(event) {
+                currentProblemForModal = event.target.dataset.problem;
+                currentTopicForModal = event.target.dataset.topic;
+
+                modalTitle.textContent = `✨ Explaining: ${currentProblemForModal}`;
+                modalContentArea.innerHTML = '';
+                modalSpinner.classList.remove('hidden');
+                modalActionsArea.classList.add('hidden');
+                showModal();
+
+                const prompt = `
+            As an expert computer science tutor, explain the LeetCode problem "${currentProblemForModal}" which is part of the topic "${currentTopicForModal}".
+            Structure your explanation clearly for an intern who is learning this concept. Use Markdown for formatting with sections like "### Core Concept", "### Brute-Force Approach", etc.
+
+            1.  **Core Concept:** Briefly explain the main data structure or algorithm pattern needed for this problem.
+            2.  **Brute-Force Approach:** Describe a simple, straightforward solution. Explain its time and space complexity and why it might be inefficient.
+            3.  **Optimal Approach:** Detail the efficient solution. Explain the logic step-by-step.
+            4.  **Complexity Analysis:** State the time and space complexity of the optimal solution and briefly justify it.
+            5.  **Key Takeaway:** What is the single most important pattern or trick to remember from this problem?
+        `;
+
+                const explanation = await callGemini(prompt);
+                modalSpinner.classList.add('hidden');
+                modalContentArea.innerHTML = formatResponse(explanation);
+                modalActionsArea.classList.remove('hidden');
+                explainAnalogyBtn.classList.remove('hidden');
+                suggestSimilarBtn.classList.remove('hidden');
+                explainAnalogyBtn.disabled = false;
+                suggestSimilarBtn.disabled = false;
+            }
+
+            async function handleSuggestSimilarProblems() {
+                suggestSimilarBtn.disabled = true;
+                explainAnalogyBtn.disabled = true;
+                similarProblemsSpinner.classList.remove('hidden');
+
+                const prompt = `
+            You are a helpful programming tutor. The user is studying the LeetCode problem "${currentProblemForModal}" which involves the topic "${currentTopicForModal}". 
+            Suggest 2-3 other LeetCode problems that use the same core pattern. 
+            For each suggestion, provide the problem name, its difficulty, and a one-sentence explanation of how it relates to "${currentProblemForModal}".
+            Format the output as a Markdown list. Do not include links.
+        `;
+
+                const suggestions = await callGemini(prompt);
+
+                const suggestionsContainer = document.createElement('div');
+                suggestionsContainer.className = 'mt-4 text-left';
+                suggestionsContainer.innerHTML = `<h3>Related Problems to Practice:</h3>${formatResponse(suggestions)}`;
+
+                modalContentArea.appendChild(suggestionsContainer);
+
+                similarProblemsSpinner.classList.add('hidden');
+                modalActionsArea.classList.add('hidden');
+            }
+
+            async function handleExplainAnalogy() {
+                explainAnalogyBtn.disabled = true;
+                suggestSimilarBtn.disabled = true;
+                analogySpinner.classList.remove('hidden');
+
+                const prompt = `
+            You are a creative and helpful programming tutor. The user is trying to understand the core concept behind the LeetCode problem "${currentProblemForModal}", which is related to the topic "${currentTopicForModal}".
+            Explain the core data structure or algorithm for this problem using a simple, real-world analogy.
+            Make the analogy easy to understand for a beginner.
+            Format the output as a short paragraph.
+        `;
+
+                const analogy = await callGemini(prompt);
+
+                const analogyContainer = document.createElement('div');
+                analogyContainer.className = 'mt-4 text-left';
+                analogyContainer.innerHTML = `<h3>Real-World Analogy:</h3><p>${formatResponse(analogy)}</p>`;
+
+                modalContentArea.appendChild(analogyContainer);
+
+                analogySpinner.classList.add('hidden');
+                modalActionsArea.classList.add('hidden');
+            }
+
+            async function handleDailyKickoff() {
+                let theme = "general software engineering";
+                if (currentWeekFilter) {
+                    const weekData = curriculumData.find(item => item.week === currentWeekFilter);
+                    if (weekData) {
+                        theme = weekData.theme;
+                    }
+                }
+
+                kickoffTopicArea.classList.remove('hidden');
+                kickoffTopicArea.innerHTML = '<div class="spinner w-6 h-6 mx-auto"></div>';
+                dailyKickoffBtn.disabled = true;
+
+                const prompt = `
+            You are a senior software engineer mentoring interns. For their pair programming session today, their focus is on "${theme}". 
+            Generate a single, thought-provoking icebreaker question or a small conceptual warm-up challenge related to this topic. 
+            The goal is to spark a deep discussion before they start coding. Keep it concise and wrap the main question in bold markdown.
+        `;
+
+                const kickoffTopic = await callGemini(prompt);
+                kickoffTopicArea.innerHTML = formatResponse(kickoffTopic);
+                dailyKickoffBtn.disabled = false;
+            }
+
+            async function handleSynthesizeWeek() {
+                if (!currentWeekFilter) return;
+
+                const weekData = curriculumData.filter(item => item.week === currentWeekFilter);
+                const problemList = weekData.map(p => p.problems.map(prob => prob.name).join(' & ')).join(', ');
+                const themeList = [...new Set(weekData.map(p => p.theme))].join(', ');
+
+                modalTitle.textContent = `✨ Synthesis for Week ${currentWeekFilter}`;
+                modalContentArea.innerHTML = '';
+                modalActionsArea.classList.add('hidden');
+                modalSpinner.classList.remove('hidden');
+                showModal();
+
+                const prompt = `
+            You are an encouraging and insightful mentor for a group of software engineering interns.
+            For Week ${currentWeekFilter} of their DSA bootcamp, they focused on the themes of "${themeList}" and solved the following problems: ${problemList}.
+
+            Please generate a weekly synthesis in Markdown format, using ### for headers.
+
+            ### Weekly Theme Summary
+            Briefly summarize the core concepts they mastered this week.
+            
+            ### Key Patterns Unlocked
+            Identify 2-3 crucial algorithmic patterns they learned and why they are important.
+            
+            ### Challenge Yourself
+            Propose one or two new, hypothetical problem ideas that would require them to combine the patterns from this week. Do not solve them, just state the problem.
+            
+            ### Mentor's Note
+            Write a short, encouraging message to motivate them for the week ahead.
+        `;
+
+                const synthesis = await callGemini(prompt);
+                modalSpinner.classList.add('hidden');
+                modalContentArea.innerHTML = formatResponse(synthesis);
+            }
+
+            function populatePatternDropdowns() {
+                const themes = [...new Set(curriculumData.map(item => item.theme.split(' & ')[0]))];
+                const pattern1Select = document.getElementById('pattern1');
+                const pattern2Select = document.getElementById('pattern2');
+
+                themes.forEach(theme => {
+                    const option1 = document.createElement('option');
+                    option1.value = theme;
+                    option1.textContent = theme;
+                    pattern1Select.appendChild(option1);
+
+                    const option2 = document.createElement('option');
+                    option2.value = theme;
+                    option2.textContent = theme;
+                    pattern2Select.appendChild(option2);
+                });
+                pattern2Select.selectedIndex = 1;
+            }
+
+            function populateInterviewTopics() {
+                const themes = [...new Set(curriculumData.map(item => item.theme.split(' & ')[0]))];
+                const select = document.getElementById('interview-topic-select');
+                themes.forEach(theme => {
+                    const option = document.createElement('option');
+                    option.value = theme;
+                    option.textContent = theme;
+                    select.appendChild(option);
+                });
+            }
+
+            async function handleComparePatterns() {
+                const pattern1 = document.getElementById('pattern1').value;
+                const pattern2 = document.getElementById('pattern2').value;
+
+                if (pattern1 === pattern2) {
+                    comparisonResultArea.classList.remove('hidden');
+                    comparisonResultArea.innerHTML = "Please select two different patterns to compare.";
+                    return;
+                }
+
+                comparisonResultArea.classList.remove('hidden');
+                comparisonResultArea.innerHTML = '<div class="spinner w-6 h-6 mx-auto"></div>';
+                comparePatternsBtn.disabled = true;
+
+                const prompt = `
+            As an expert CS tutor, I need to understand the difference between the "${pattern1}" and "${pattern2}" algorithmic patterns.
+            Please provide a comparison in Markdown format, using ### for headers.
+            
+            ### ${pattern1}
+            - **What it is:** Briefly describe the pattern.
+            - **When to use it:** Describe the typical signals in a problem that suggest using this pattern.
+            - **Classic Example:** Name one classic problem that uses it.
+
+            ### ${pattern2}
+            - **What it is:** Briefly describe the pattern.
+            - **When to use it:** Describe the typical signals in a problem that suggest using this pattern.
+            - **Classic Example:** Name one classic problem that uses it.
+
+            ### Key Differences
+            Summarize the most important distinctions between the two in a short paragraph.
+        `;
+
+                const comparison = await callGemini(prompt);
+                comparisonResultArea.innerHTML = formatResponse(comparison);
+                comparePatternsBtn.disabled = false;
+            }
+
+            function setFeedbackButtonsDisabled(disabled) {
+                codeReviewBtn.disabled = disabled;
+                complexityAnalysisBtn.disabled = disabled;
+                explainLogicBtn.disabled = disabled;
+                decodeErrorBtn.disabled = disabled;
+            }
+
+            async function handleCodeReview() {
+                const codeInput = document.getElementById('code-input').value;
+                const problemContext = document.getElementById('problem-context').value;
+
+                if (!codeInput.trim()) {
+                    feedbackResultArea.classList.remove('hidden');
+                    feedbackResultArea.innerHTML = "Please paste your code into the text area.";
+                    return;
+                }
+                if (!problemContext.trim()) {
+                    feedbackResultArea.classList.remove('hidden');
+                    feedbackResultArea.innerHTML = "Please provide the problem name for context.";
+                    return;
+                }
+
+                feedbackResultArea.classList.remove('hidden');
+                feedbackResultArea.innerHTML = '<div class="spinner w-6 h-6 mx-auto"></div>';
+                setFeedbackButtonsDisabled(true);
+
+                const prompt = `
+            You are a kind and experienced senior software engineer conducting a code review. An intern has submitted the following JavaScript code for the problem: "${problemContext}".
+            Please provide constructive feedback on their code using Markdown with #### for sub-headers. Do not provide the optimal solution, but guide them.
+
+            #### Readability
+            Comment on variable names, clarity, and comments.
+
+            #### Style & Conventions
+            Does it follow common JavaScript conventions?
+
+            #### Logic & Edge Cases
+            Are there any potential bugs or edge cases they might have missed (e.g., empty arrays, zero values)?
+
+            #### Suggestions for Improvement
+            Offer suggestions for improving the code's structure or approach without giving away a completely different or optimal solution.
+
+            Here is the code:
+            \`\`\`javascript
+            ${codeInput}
+            \`\`\`
+        `;
+
+                const review = await callGemini(prompt);
+                feedbackResultArea.innerHTML = formatResponse(review);
+                setFeedbackButtonsDisabled(false);
+            }
+
+            async function handleComplexityAnalysis() {
+                const codeInput = document.getElementById('code-input').value;
+
+                if (!codeInput.trim()) {
+                    feedbackResultArea.classList.remove('hidden');
+                    feedbackResultArea.innerHTML = "Please paste your code into the text area.";
+                    return;
+                }
+
+                feedbackResultArea.classList.remove('hidden');
+                feedbackResultArea.innerHTML = '<div class="spinner w-6 h-6 mx-auto"></div>';
+                setFeedbackButtonsDisabled(true);
+
+                const prompt = `
+            You are an expert in algorithms. Please analyze the time and space complexity of the following JavaScript code snippet.
+            Explain your reasoning step-by-step in a way that is easy for an intern to understand. Use Markdown with #### for sub-headers.
+
+            #### Time Complexity
+            Walk through the code line by line or block by block, explaining how each part contributes to the overall time complexity. Conclude with the final Big O notation.
+
+            #### Space Complexity
+            Analyze the extra space used by the algorithm, not including the input itself. Explain which data structures or variables contribute to the space usage and conclude with the final Big O notation.
+
+            Here is the code:
+            \`\`\`javascript
+            ${codeInput}
+            \`\`\`
+        `;
+
+                const analysis = await callGemini(prompt);
+                feedbackResultArea.innerHTML = formatResponse(analysis);
+                setFeedbackButtonsDisabled(false);
+            }
+
+            async function handleExplainLogic() {
+                const codeInput = document.getElementById('code-input').value;
+                const problemContext = document.getElementById('problem-context').value;
+
+                if (!codeInput.trim()) {
+                    feedbackResultArea.classList.remove('hidden');
+                    feedbackResultArea.innerHTML = "Please paste code in the text area to have it explained.";
+                    return;
+                }
+
+                feedbackResultArea.classList.remove('hidden');
+                feedbackResultArea.innerHTML = '<div class="spinner w-6 h-6 mx-auto"></div>';
+                setFeedbackButtonsDisabled(true);
+
+                const prompt = `
+            You are an expert code explainer. An intern has written the following JavaScript code for the problem "${problemContext || 'an unspecified problem'}".
+            Translate this code into a step-by-step, plain English explanation of its logic. 
+            Focus on the "how" and "why" of the code, as if you were explaining it to a non-programmer.
+
+            Here is the code:
+            \`\`\`javascript
+            ${codeInput}
+            \`\`\`
+        `;
+
+                const explanation = await callGemini(prompt);
+                feedbackResultArea.innerHTML = formatResponse(explanation);
+                setFeedbackButtonsDisabled(false);
+            }
+
+            async function handleDecodeError() {
+                const codeInput = document.getElementById('code-input').value;
+                const problemContext = document.getElementById('problem-context').value;
+                const errorMsg = document.getElementById('error-input').value;
+
+                if (!errorMsg.trim()) {
+                    feedbackResultArea.classList.remove('hidden');
+                    feedbackResultArea.innerHTML = "Please paste the error message you received.";
+                    return;
+                }
+
+                feedbackResultArea.classList.remove('hidden');
+                feedbackResultArea.innerHTML = '<div class="spinner w-6 h-6 mx-auto"></div>';
+                setFeedbackButtonsDisabled(true);
+
+                const prompt = `
+            You are a helpful debugging assistant. An intern is working on the problem "${problemContext || 'an unspecified problem'}" and received an error.
+
+            Their code is:
+            \`\`\`javascript
+            ${codeInput || 'No code provided.'}
+            \`\`\`
+
+            The error message is:
+            \`\`\`
+            ${errorMsg}
+            \`\`\`
+
+            Please explain the following in a clear, encouraging way using Markdown with #### for sub-headers:
+            #### What This Error Means
+            Explain the error message in simple terms.
+
+            #### Likely Causes
+            Based on the error and the provided code (if any), what are 2-3 likely reasons this error is happening?
+
+            #### How to Debug
+            Suggest a concrete next step for debugging. For example: "Add a console.log(variableName) before line X to check its value." or "Check if your input array could be empty." Do not give the final answer.
+        `;
+
+                const explanation = await callGemini(prompt);
+                feedbackResultArea.innerHTML = formatResponse(explanation);
+                setFeedbackButtonsDisabled(false);
+            }
+
+            async function handleGenerateInterviewQuestion() {
+                const topic = document.getElementById('interview-topic-select').value;
+                interviewQuestionArea.classList.remove('hidden');
+                interviewQuestionArea.innerHTML = '<div class="spinner w-6 h-6 mx-auto"></div>';
+                generateInterviewQuestionBtn.disabled = true;
+
+                const prompt = `
+            You are an expert technical interviewer preparing questions for an intern.
+            Generate a single behavioral interview question that connects the technical topic of "${topic}" to a real-world engineering scenario or soft skill.
+            The question should prompt the intern to tell a story or explain a thought process.
+            For example, for "Graphs," you might ask: "Tell me about a time you had to explain a complex, interconnected system to someone non-technical."
+            Keep the question concise and wrap it in bold markdown.
+        `;
+
+                const question = await callGemini(prompt);
+                interviewQuestionArea.innerHTML = formatResponse(question);
+                generateInterviewQuestionBtn.disabled = false;
+            }
+
+
+            synthesizeWeekBtn.addEventListener('click', handleSynthesizeWeek);
+            suggestSimilarBtn.addEventListener('click', handleSuggestSimilarProblems);
+            explainAnalogyBtn.addEventListener('click', handleExplainAnalogy);
+            dailyKickoffBtn.addEventListener('click', handleDailyKickoff);
+            comparePatternsBtn.addEventListener('click', handleComparePatterns);
+            codeReviewBtn.addEventListener('click', handleCodeReview);
+            complexityAnalysisBtn.addEventListener('click', handleComplexityAnalysis);
+            explainLogicBtn.addEventListener('click', handleExplainLogic);
+            decodeErrorBtn.addEventListener('click', handleDecodeError);
+            generateInterviewQuestionBtn.addEventListener('click', handleGenerateInterviewQuestion);
+
+            renderSchedule(null);
+            setupFilters();
+            renderTopicsChart();
+            setupPairingSchedule();
+            setupDetailsToggles();
+            populatePatternDropdowns();
+            populateInterviewTopics();
+        });
+    </script>
+</body>
+
+</html>
